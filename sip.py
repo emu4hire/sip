@@ -1,9 +1,9 @@
 #sip (Shell In Python), for Operating Systems (CS444)
-import os
-import parser
-import sys
+import os, sys, signal, errno
 from socket import gethostname
 from getpass import getuser
+import parser
+import builtins
 
 def sip():
   print("\n           Welcome to sip (Shell In Python)!\n")
@@ -26,7 +26,7 @@ def sip():
       hist.append(line)
     else:
       hist.pop(0)
-      hist.append(line)
+      hist.appendi(line)
 
     #Parse command line into commands
     cmd, args, instream, outstream, background = parser.parse(line)
@@ -34,50 +34,99 @@ def sip():
     #Check if the command is a builtin
     if parser.isbuiltin(cmd):
       getattr(sys.modules[__name__], cmd)(args)
+
+    #Check if command is a history call.
+    elif cmd[0] == '!':
+      repeat(int(cmd[1:]))
+
+    #Command is external
     else:
-      childPid = os.fork()
-      if childPid == 0:
-        os.execvp(cmd, ([cmd]+args))
-      else:
-        if background:
-          continue
+      try:
+        childPid = os.fork()
+        if childPid == 0:
+          os.execvp(cmd, ([cmd]+args))
         else:
-          os.waitpid(childPid, 0)
+          if background:
+            bPid = os.spawnvp(os.P_NOWAIT, cmd, ([cmd]+args))
+            joblist.append((bPid, cmd))
+            
+          else:
+            ecode = os.waitpid(childPid, 0)
+
+      except OSError as e:
+        print e.strerror
 
     #If the command is exit, exit
 
-#Change directory
-def cd(args):
-  if len(args) == 0:
-    os.chdir(os.environ['HOME'])
-  elif args[0] == '~':
-    os.chdir(os.environ['HOME'])
-  else:
-    os.chdir(str(args[0]))
+# BUILT IN FUNCTIONS
 
-#Print current working directory
-def pwd(args):
-  print os.getcwd()
+#Change directory                                                                            
+def cd(args):                                                                             
+  if len(args) == 0:                                                                      
+    os.chdir(os.environ['HOME'])                                                          
+  elif args[0] == '~':                                                                    
+    os.chdir(os.environ['HOME'])                                                          
+  else:                                                                                   
+    os.chdir(str(args[0]))                                                                
+                                                                                          
+#Print current working directory                                                             
+def pwd(args):                                                                            
+  print os.getcwd()                                                                       
+                                                                                          
+#Print history                                                                               
+def history(args):                                                                        
+  for index, item in enumerate(hist):                                                     
+    print ("%d      %s" %(index, item))                                                   
+                                                                                          
+def repeat(num):                                                                          
+      if((len(hist)-1) < num):                                                            
+        print "No such command in history"                                                
+      else:                                                                               
+        if num < 0:                                                                       
+          ref = (len(hist)-1) + num                                                       
+        else:                                                                             
+          ref = num                                                                       
 
-#Print history
-def history(args):
-  for index, item in enumerate(hist):
-    print ("%d      %s" %(index, item))
+#list current jobs
+def jobs(args):
 
-#Kill numbered process
+    #Update backgroun job list
+    for job in joblist:
+      try:
+        os.kill(job[0], 0)
+      except OSError as e:
+        if e.errno == errno.ESRCH:
+          joblist.remove(job)
+        else:
+          continue
+
+    print "#    PID     COMMAND"
+    for index, item in enumerate(joblist):
+      print ("%d    %s    %s" %(index, item[0], item[1]))
+                                                                                        
+#Kill numbered process                                                                       
 def kill(args):
-  return None
+  try:
+    if args[0] == '%':
+      os.kill(joblist(args[1:])[0], signal.SIGKILL)
+    else:                                                                           
+      os.kill(int(args[0]), signal.SIGKILL)
+    
+  except OSError as e:
+      print e.strerror
+                                                                                          
+#Print help                                                                                  
+def help(args):                                                                           
+  return None                                                                             
+                                                                                          
+#Exit                                                                                     
+def exit(args):                                                                           
+  sys.exit()                                                                              
+  return None   
 
-#Print help
-def help(args):
-  return None
-
-#Exit
-def exit(args):
-  sys.exit()
-  return None
 
 #Hook for executing shell.
 if __name__ == "__main__":
   hist = list()
+  joblist = list()
   sip()

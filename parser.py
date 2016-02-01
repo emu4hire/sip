@@ -33,6 +33,8 @@ def isbuiltin(cmd):
     return True
   elif cmd.lower() == 'history':
     return True
+  elif cmd.lower() == "jobs":
+    return True
   elif cmd.lower() == 'kill':
     return True
   elif cmd.lower() == 'help':
