@@ -1,5 +1,6 @@
+import errno
 from os.path import isfile
-from os import makedirs, environ, remove
+from os import makedirs, environ, remove, kill
 
 class ShellState:
   home = environ['HOME']
@@ -42,5 +43,15 @@ class ShellState:
     (open(self.histfile, 'w')).close()
     self.hist = self.loadhistory()
 
-  def updateprocess(self, pid):
-    state.currentprocess = pid
+  def addjob(self, pid, name):
+    self.jobs.append((pid, name))
+  
+  def updatejobs(self):
+    #Update background job list                                                             
+    for job in self.jobs:                                                                     
+      try:                                                                                  
+        kill(job[0], 0)                                                                  
+      except OSError as e:                                                                
+        if e.errno == errno.ESRCH:                                                        
+          self.jobs.remove(job)                                                          
+          continue   

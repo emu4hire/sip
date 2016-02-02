@@ -6,8 +6,8 @@ from cmdinfo import CmdInfo
 def parse(line):
   tokens = line.split()
   args = list()
-  instream = ""
-  outstream = ""
+  instream = None
+  outstream = None
   background = False
   skip = False
 
@@ -15,17 +15,17 @@ def parse(line):
     if skip:
       continue
     elif item == '<':
-      ins = tokens[index+1]
+      instream = tokens[index+1]
       skip = True
     elif item == '>':
-      outs = tokens[index+1]
+      outstream = tokens[index+1]
       skip = True
     elif item == '&':
       background = True
     else:
       args.append(item)
 
-  return CmdInfo(tokens[0], args, background)
+  return CmdInfo(tokens[0], args, instream, outstream, background)
 
 def commandtype(cmd):
   if cmd.lower() == 'cd':

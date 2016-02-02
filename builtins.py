@@ -1,4 +1,4 @@
-import os
+import os, signal, errno, sys
 from sip import run
 from parser import parse
 ###########################################                                               
@@ -47,19 +47,10 @@ def repeat(state,cmd):
                                                                                           
 #list current jobs                                                                        
 def jobs(state, cmd):                                                                           
-                                                                                          
-    #Update backgroun job list                                                            
-    for job in state.jobs:                                                                   
-      try:                                                                                
-        os.kill(job[0], 0)                                                                
-      except OSError as e:                                                                
-        if e.errno == errno.ESRCH:                                                        
-          state.jobs.remove(job)                                                             
-        continue                                                                          
-                                                                                          
-    print "#    PID     COMMAND"                                                          
-    for index, item in enumerate(state.jobs):                                                
-      print ("%d    %s    %s" %(index, item[0], item[1]))                                 
+  state.updatejobs()                                                                      
+  print "#    PID     COMMAND"                                                          
+  for index, item in enumerate(state.jobs):                                                
+    print ("%d    %s    %s" %(index, item[0], item[1]))                                 
                                                                                           
 #Kill numbered process                                                                       
 def kill(state, cmd):                                                                           
@@ -77,7 +68,8 @@ def help(state, cmd):
   return None                                                                             
                                                                                           
 #Exit                                                                                     
-def exit(state, cmd):                                                                           
+def exit(state, cmd):                                                                          
+  state.updatejobs()
   if len(state.jobs) > 0:                                                                    
     print "There are jobs running in the background. Please kill them!"                   
   else:                                                                                   

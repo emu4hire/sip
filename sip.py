@@ -56,22 +56,21 @@ def run(state, cmd):
   #If command is external,                                                            
   else:                                                                               
     try:                                                                              
-      childPid = os.fork() #Create new process.                                                                                      
+      childPid = os.fork() #Create new process.                                                                          
       if childPid == 0:                                                               
         os.execvp(cmd.name, ([cmd.name]+cmd.args)) #If child, execute                    
                                                                                              
       else:                                                                              
         if cmd.background: #If the process is background, don't wait, and append to the list.
           signal.signal(signal.SIGCHLD, reaper)                                          
-          joblist.append((childPid, cmd.name))                                        
+          state.addjob(childPid, cmd.name) 
                                                                                           
         else: #If the process is no background, wait for it.                          
-          state.updateprocess(childPid)                                               
           ecode = os.waitpid(childPid, 0)                                             
                                                                                           
     except OSError as e:                                                              
       print e.strerror                                                                
-        
+
 def reaper(sig, stack):
   os.waitpid(-1, os.WNOHANG)
 
