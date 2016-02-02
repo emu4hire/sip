@@ -1,4 +1,6 @@
 import os
+from sip import run
+from parser import parse
 ###########################################                                               
 # BUILT IN FUNCTIONS                                                                      
 ###########################################                                               
@@ -21,19 +23,27 @@ def history(state, cmd):
   for index, item in enumerate(state.hist):                                                     
     print ("%d      %s" %(index, item))                                                   
 
+#Clear history
 def clear(state, cm):
   state.clearhistory()
   print "History cleared!"
-                                                                                          
+
+#Repeat an item from history                                                                                          
 def repeat(state,cmd):
-      num = cmd[1:]
+      num = int(cmd.name[1:])
       if((len(state.hist)-1) <num):                                                            
         print "No such command in history"                                                
       else:                                                                               
         if num < 0:                                                                       
-          ref = (len(state.hist)-1) + num                                                       
+          ref = (len(state.hist)-1) + num
+          line = state.hist[ref]
         else:                                                                             
-          ref = num                                                                       
+          ref = num
+          line = state.hist[ref]
+        
+        state.updatehistory(line)
+        command = parse(line)
+        run(state, command)
                                                                                           
 #list current jobs                                                                        
 def jobs(state, cmd):                                                                           
