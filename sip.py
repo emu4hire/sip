@@ -5,6 +5,8 @@ from socket import gethostname
 from getpass import getuser
 import parser
 import builtins
+from shellstate import ShellState
+from cmdinfo import CmdInfo
 
 #########################################
 # MAIN SHELL
@@ -12,7 +14,7 @@ import builtins
 
 def sip():
   print("\n           Welcome to sip (Shell In Python)!\n")
-
+   #initiialize hostname, username, and home variables
   hostname = gethostname()
   username = getuser()
   homedir = os.environ['HOME']
@@ -25,24 +27,19 @@ def sip():
 
     #Get command line and print prompt
     line = raw_input(prompt)
-
-    #Put commands into history
-    if len(hist) < 100:
-      hist.append(line)
-    else:
-      hist.pop(0)
-      hist.appendi(line)
+  
+    state.updatehistory(line)
 
     #Parse command line into commands
-    cmd, args, instream, outstream, background = parser.parse(line)
+    cmd = parser.parse(line)
 
     #Check if the command is a builtin
-    if parser.isbuiltin(cmd):
-      getattr(sys.modules[__name__], cmd)(args)
+    if parser.commandtype(cmd.name) == 'builtin':
+      (getattr(builtins, cmd.name)(state, cmd))
 
     #Check if command is a history call.
-    elif cmd[0] == '!':
-      repeat(int(cmd[1:]))
+    elif parser.commandtype(cmd.name) == 'historyrepeat':
+      builtins.repeat(state, cmd)
 
     #If command is external,
     else:
@@ -50,96 +47,27 @@ def sip():
         childPid = os.fork() #Create new process.
 
         if childPid == 0: 
-          os.execvp(cmd, ([cmd]+args)) #If child, execute
+          os.execvp(cmd.name, ([cmd.name]+cmd.args)) #If child, execute
 
         else:
-          if background: #If the process is background, don't wait, and append to the list.
+          if cmd.background: #If the process is background, don't wait, and append to the list.
             signal.signal(signal.SIGCHLD, reaper)
-            joblist.append((childPid, cmd))
+            joblist.append((childPid, cmd.name))
 
           else: #If the process is no background, wait for it.
+            state.updateprocess(childPid)
             ecode = os.waitpid(childPid, 0)
 
       except OSError as e:
         print e.strerror
-
+#Reaps child processes which have been put in the background.
 def reaper(sig, stack):
   os.waitpid(-1, os.WNOHANG)
-
-###########################################
-# BUILT IN FUNCTIONS
-###########################################
-
-#Change directory                                                                            
-def cd(args):                                                                             
-  if len(args) == 0:                                                                      
-    os.chdir(os.environ['HOME'])                                                          
-  elif args[0] == '~':                                                                    
-    os.chdir(os.environ['HOME'])                                                          
-  else:                                                                                   
-    os.chdir(str(args[0]))                                                                
-                                                                                          
-#Print current working directory                                                             
-def pwd(args):                                                                            
-  print os.getcwd()                                                                       
-                                                                                          
-#Print history                                                                               
-def history(args):                                                                        
-  for index, item in enumerate(hist):                                                     
-    print ("%d      %s" %(index, item))                                                   
-                                                                                          
-def repeat(num):                                                                          
-      if((len(hist)-1) < num):                                                            
-        print "No such command in history"                                                
-      else:                                                                               
-        if num < 0:                                                                       
-          ref = (len(hist)-1) + num                                                       
-        else:                                                                             
-          ref = num                                                                       
-
-#list current jobs
-def jobs(args):
-
-    #Update backgroun job list
-    for job in joblist:
-      try:
-        os.kill(job[0], 0)
-      except OSError as e:
-        if e.errno == errno.ESRCH:
-          joblist.remove(job)
-        continue
-
-    print "#    PID     COMMAND"
-    for index, item in enumerate(joblist):
-      print ("%d    %s    %s" %(index, item[0], item[1]))
-                                                                                        
-#Kill numbered process                                                                       
-def kill(args):
-  try:
-    if args[0] == '%':
-      os.kill(joblist(args[1:])[0], signal.SIGKILL)
-    else:                                                                           
-      os.kill(int(args[0]), signal.SIGKILL)
-    
-  except OSError as e:
-      print e.strerror
-                                                                                          
-#Print help                                                                                  
-def help(args):                                                                           
-  return None                                                                             
-                                                                                          
-#Exit                                                                                     
-def exit(args):
-  if len(joblist) > 0:
-    print "There are jobs running in the background. Please kill them!"
-  else:
-    print "Thanks having a sip."
-    sys.exit()                                                                             
 
 #########################################
 #Hook for executing shell.
 #########################################
-if __name__ == "__main__":
-  hist = list()
-  joblist = list()
+if __name__ == "__main__": 
+  #initialize state
+  state = ShellState()
   sip()

@@ -1,6 +1,7 @@
 # Parser for sip
 # Author:Michael Fulton
 # Licensed Under the MIT License (full details in LICENSE)
+from cmdinfo import CmdInfo
 
 def parse(line):
   tokens = line.split()
@@ -24,22 +25,26 @@ def parse(line):
     else:
       args.append(item)
 
-  return tokens[0], args, instream, outstream, background
+  return CmdInfo(tokens[0], args, background)
 
-def isbuiltin(cmd):
+def commandtype(cmd):
   if cmd.lower() == 'cd':
-    return True
+    return 'builtin'
   elif cmd.lower() == 'pwd':
-    return True
+    return 'builtin'
   elif cmd.lower() == 'history':
-    return True
+    return 'builtin'
+  elif cmd.lower() == 'clear':
+    return 'builtin'
   elif cmd.lower() == "jobs":
-    return True
+    return 'builtin'
   elif cmd.lower() == 'kill':
-    return True
+    return 'builtin'
   elif cmd.lower() == 'help':
-    return True
+    return 'builtin'
   elif cmd.lower() == 'exit':
-    return True
+    return 'builtin'
+  elif cmd.lower()[0] == '!':
+    return 'historyrepeat'
   else:
-    return False
+    return None
