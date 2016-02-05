@@ -15,10 +15,18 @@ def parse(line):
     if skip:
       continue
     elif item == '<':
-      instream = tokens[index+1]
+      infile = tokens[index+1]
+      try:
+        instream = open(infile, 'r')
+      except IOError as e:
+        instream = None
       skip = True
     elif item == '>':
-      outstream = tokens[index+1]
+      outfile = tokens[index+1]
+      try:
+        outstream = open(outfile, 'r')
+      except IOError as e:
+        outstream = None
       skip = True
     elif item == '&':
       background = True

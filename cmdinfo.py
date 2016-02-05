@@ -1,7 +1,7 @@
 class CmdInfo:
-  def __init__(self, name, args, infile, outfile, background):
+  def __init__(self, name, args, instream, outstream, background):
     self.name = name
     self. args = args
-    self.infile = infile
-    self.outfile = outfile
+    self.instream = instream
+    self.outstream = outstream
     self.background = background
