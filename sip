@@ -75,12 +75,14 @@ def run(state, cmd):
     except OSError as e:                                                              
       print e.strerror
 
+#Set stdin and stdout to the passed in file objects, if they are not None.
 def updateio(instream, outstream):
   if instream != None:
     os.dup2(instream.fileno(), 0)
   if outstream != None:
     os.dup2( outstream.fileno(), 1)
 
+#REap any dead children.
 def reaper(sig, stack):
   os.waitpid(-1, os.WNOHANG)
 

@@ -3,6 +3,7 @@
 # Licensed Under the MIT License (full details in LICENSE)
 from cmdinfo import CmdInfo
 
+# Parses a line with space seperated commands, and create a command info object to represent it.
 def parse(line):
   tokens = line.split()
   args = list()
@@ -12,9 +13,10 @@ def parse(line):
   skip = False
 
   for index, item in enumerate(tokens[1:]):
+    #IF skip is set, this means that the next token has already been handled, and can be skipped.
     if skip:
       continue
-
+    #Recognize if input redirect is called for, and open the file object.
     elif item == '<':
       infile = tokens[index+2]
       try:
@@ -24,6 +26,7 @@ def parse(line):
         instream = None
       skip = True
 
+    #Recognize if output redirect is called for, and open the file object.
     elif item == '>':
       outfile = tokens[index+2]
       try:
@@ -31,13 +34,19 @@ def parse(line):
       except IOError as e:
         outstream = None
       skip = True
+
+    #REcognize if the process is to be backgrounded
     elif item == '&':
       background = True
+
+    #If this argument is nothing else, append it to the argument list.  This includes the first 
+    # toekn, which is also added to the object as the name of the command.
     else:
       args.append(item)
 
   return CmdInfo(tokens[0], args, instream, outstream, background)
 
+#Return the command type which was passed, (if None is returned, it is an external command)
 def commandtype(cmd):
   if cmd.lower() == 'cd':
     return 'builtin'

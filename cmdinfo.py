@@ -1,3 +1,4 @@
+# Class ccontaining parsed input for a command
 class CmdInfo:
   def __init__(self, name, args, instream, outstream, background):
     self.name = name

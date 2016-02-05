@@ -1,3 +1,5 @@
+# Builtin functions for sip.
+
 import os, signal, errno, sys
 from sip import run
 from parser import parse
@@ -57,19 +59,19 @@ def jobs(state, cmd):
                                                                                           
 #Kill numbered process                                                                       
 def kill(state, cmd):                                                                           
-  try:                                                                                    
-    if cmd.args[0] == '%':                                                                    
-      os.kill(state.jobs(cmd.args[1:])[0], signal.SIGKILL)                                       
+  try:
+    job = cmd.args[0]                                                                      
+    if job[0] == '%':                                                                    
+      os.kill(int(job[1:]), signal.SIGKILL)                                       
     else:                                                                                 
-      os.kill(int(cmd.args[0]), signal.SIGKILL)                                               
+      os.kill(int(job), signal.SIGKILL)                                               
                                                                                           
   except OSError as e:                                                                    
       print e.strerror                                                                    
                                                                                           
 #Print help                                                                                  
 def help(state, cmd):
-  print "\n "
-  print "                         SHELL IN PYTHON"
+  print "\n                         SHELL IN PYTHON"
   print "-------------------------------------------------------------------------"
   print "   cd         -- Changes directory"
   print "   pwd        -- Print current working directory to std out"
