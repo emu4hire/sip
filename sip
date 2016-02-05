@@ -57,30 +57,29 @@ def run(state, cmd):
   #If command is external,                                                            
   else:                                                                               
     try:
-      updateio(cmd.instream, cmd.outstream)
       childPid = os.fork() #Create new process.                                                                          
       if childPid == 0:                                                               
+        updateio(cmd.instream, cmd.outstream)
         os.execvp(cmd.name, ([cmd.name]+cmd.args)) #If child, execute                    
                                                                                              
       else:                                                                              
         if cmd.background: #If the process is background, don't wait, and append to the list.
-          updateio(os.devnull, os.devnull)
           signal.signal(signal.SIGCHLD, reaper)                                          
           state.addjob(childPid, cmd.name) 
                                                                                           
         else: #If the process is no background, wait for it.                          
           ecode = os.waitpid(childPid, 0)
 
-      updateio(sys.__stdin__, sys.__stdout__)
+#      updateio(sys.__stdin__, sys.__stdout__)
                                                                                           
     except OSError as e:                                                              
       print e.strerror
 
 def updateio(instream, outstream):
   if instream != None:
-   os.dup2(sys.stdin.fileno(), instream.fileno())
+    os.dup2(instream.fileno(), 0)
   if outstream != None:
-   os.dup2(sys.stdout.fileno(), outstream.fileno())
+    os.dup2( outstream.fileno(), 1)
 
 def reaper(sig, stack):
   os.waitpid(-1, os.WNOHANG)

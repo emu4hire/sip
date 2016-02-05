@@ -14,17 +14,20 @@ def parse(line):
   for index, item in enumerate(tokens[1:]):
     if skip:
       continue
+
     elif item == '<':
-      infile = tokens[index+1]
+      infile = tokens[index+2]
       try:
         instream = open(infile, 'r')
       except IOError as e:
+        print "No such file exists.  Standard in will be used"
         instream = None
       skip = True
+
     elif item == '>':
-      outfile = tokens[index+1]
+      outfile = tokens[index+2]
       try:
-        outstream = open(outfile, 'r')
+        outstream = open(outfile, 'w')
       except IOError as e:
         outstream = None
       skip = True
@@ -41,6 +44,8 @@ def commandtype(cmd):
   elif cmd.lower() == 'pwd':
     return 'builtin'
   elif cmd.lower() == 'history':
+    return 'builtin'
+  elif cmd.lower() == 'rmhistory':
     return 'builtin'
   elif cmd.lower() == 'clear':
     return 'builtin'

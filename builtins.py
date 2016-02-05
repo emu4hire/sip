@@ -24,9 +24,12 @@ def history(state, cmd):
     print ("%d      %s" %(index, item))                                                   
 
 #Clear history
-def clear(state, cm):
+def rmhistory(state, cm):
   state.clearhistory()
   print "History cleared!"
+
+def clear(state, cm):
+  sys.stderr.write("\x1b[2J\x1b[H")
 
 #Repeat an item from history                                                                                          
 def repeat(state,cmd):
@@ -64,8 +67,19 @@ def kill(state, cmd):
       print e.strerror                                                                    
                                                                                           
 #Print help                                                                                  
-def help(state, cmd):                                                                           
-  return None                                                                             
+def help(state, cmd):
+  print "\n "
+  print "                         SHELL IN PYTHON"
+  print "-------------------------------------------------------------------------"
+  print "   cd         -- Changes directory"
+  print "   pwd        -- Print current working directory to std out"
+  print "   history    -- Print current history"
+  print "   !n         -- repate command n from history"
+  print "   rmhistory  -- Clear history"
+  print "   jobs       -- List currently background jobs"
+  print "   kill       -- Kill the process with the PID given, or the position n on the list if the input is %n"
+  print "   clear      -- Clear terminal"
+  print "   exit       -- Exit the shell, assuming that no background processes are currently running"
                                                                                           
 #Exit                                                                                     
 def exit(state, cmd):                                                                          
